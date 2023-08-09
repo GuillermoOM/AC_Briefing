@@ -1,20 +1,21 @@
 import * as THREE from "three";
-import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 
 // Globals
-let camera, controls, map_mesh, line, mission_info;
+let camera, map_mesh, line, mission_info;
 
 const resolution = 512;
 const size = 1024;
-const min_distance = size * 0.15;
-let zoomed_in = false;
-let highlighted = false;
+const max_zoom = size * 0.15;
+const min_zoom = size * 0.65;
+const rotation_speed = 0.1;
+const vectorZero = new THREE.Vector3(0.0,0.0,0.0);
 
 // Inits
 const container = document.getElementById("container");
 const renderer = new THREE.WebGLRenderer();
 const scene = new THREE.Scene();
 const loader = new THREE.TextureLoader();
+const clock = new THREE.Clock();
 renderer.setSize(window.innerWidth, window.innerHeight);
 container.appendChild(renderer.domElement);
 window.addEventListener("resize", onWindowResize);
@@ -22,6 +23,9 @@ window.addEventListener("resize", onWindowResize);
 let screenX = 0.0;
 let screenY = 0.0;
 let group_coordinates = [0.0, 0.0, 0.0];
+let camera_target = vectorZero;
+let zoomed_in = false;
+let highlighted = false;
 
 async function init() {
   setup_camera();
@@ -49,17 +53,10 @@ function setup_camera() {
     0.1,
     size * 2
   );
-  camera.position.z = size;
-  camera.position.y = size;
+  camera.position.z = min_zoom;
+  camera.position.y = min_zoom;
 
-  controls = new OrbitControls(camera, renderer.domElement);
-  controls.autoRotate = true;
-  controls.enableRotate = false;
-  controls.enablePan = false;
-  controls.maxDistance = size;
-  controls.minDistance = min_distance;
-  controls.autoRotateSpeed = 0.3;
-  controls.update();
+  camera.lookAt(vectorZero);
 }
 
 function load_map(map_file) {
@@ -78,8 +75,8 @@ function load_map(map_file) {
       bumpTexture: { value: map_heightMap },
       // Feed the scaling constant for the heightmap
       bumpScale: { value: 50 },
-      current_range: { value: controls.getDistance() },
-      zoom: { value: size / controls.getDistance() },
+      current_range: { value: size},
+      zoom: { value: size / size },
       selection: { value: false },
       zone: { value: new THREE.Vector2(0.0, 0.0) },
     },
@@ -156,8 +153,8 @@ function load_map(map_file) {
 function create_line() {
   // camera coords to world coords
   const points = [];
-  points.push(new THREE.Vector3(0.0, 0.0, 0.0));
-  points.push(new THREE.Vector3(0.0, 0.0, 0.0));
+  points.push(vectorZero);
+  points.push(vectorZero);
   const geometry = new THREE.BufferGeometry().setFromPoints(points);
   const material = new THREE.LineBasicMaterial({ color: 0xffffff });
   line = new THREE.Line(geometry, material);
@@ -194,23 +191,27 @@ function removeHighlight(event) {
 }
 
 function zoomObjective(event) {
-  console.log("clicked on: " + event.target.id);
-  controls.target = new THREE.Vector3(
-    group_coordinates[0],
-    group_coordinates[1],
-    group_coordinates[2]
-  );
+
 }
 
 // Updates
+function update_camera_orbit() {
+  const time = clock.getElapsedTime();
+  camera.position.x = Math.sin(time*rotation_speed)*min_zoom;
+  camera.position.z = Math.cos(time*rotation_speed)*min_zoom;
+  camera.position.y = min_zoom;
+  camera.lookAt(vectorZero);
+}
+
 function update_map() {
   map_mesh.material.uniforms.current_range = {
-    value: controls.getDistance(),
+    value: size,
   };
   map_mesh.material.uniforms.zoom = {
-    value: size / controls.getDistance(),
+    value: size / size,
   };
 }
+
 function update_objective_line(screenX, screenY, WorldX, WorldY, WorldZ) {
   // Convert screen coordinates to NDC
   if (highlighted) {
@@ -267,9 +268,8 @@ function update_objective_line(screenX, screenY, WorldX, WorldY, WorldZ) {
 
 function animate() {
   requestAnimationFrame(animate);
+  update_camera_orbit()
   update_map();
-  controls.update();
-
   update_objective_line(
     screenX,
     screenY,
