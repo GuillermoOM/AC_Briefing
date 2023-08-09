@@ -1,8 +1,6 @@
-@import url('https://fonts.googleapis.com/css2?family=Bungee+Hairline&display=swap');
-
 @font-face {
     font-family: 'ACES04';
-    src: url('fonts/ACES04.ttf') format('truetype');
+    src: url('/fonts/ACES04.ttf') format('truetype');
     font-weight: normal;
     font-style: normal;
 }
@@ -16,11 +14,28 @@ body {
   overscroll-behavior: none;
 }
 
-.selection_box {
+.ui_button {
   position: absolute;
-  width: 20%;
-  top: 10%;
-  left: 5%;
+  padding: 10px;
+  box-sizing: border-box;
+  text-align: left;
+  background-color: rgba(0, 0, 0, 0);
+  border-style: solid;
+  border-width: 2px;
+  border-color: white;
+  -moz-user-select: none;
+  -webkit-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  z-index: 1;
+}
+
+.ui_button:hover {
+  background-color: rgba(67, 144, 233, 0.466);
+}
+
+.content_box {
+  position: absolute;
   padding: 10px;
   box-sizing: border-box;
   text-align: left;
@@ -41,4 +56,16 @@ body {
 
 .selection:hover {
     background-color: rgba(67, 144, 233, 0.466);
+}
+
+#groups {
+  width: 20%;
+  top: 15%;
+  left: 5%;
+}
+
+#reset_view {
+  visibility: hidden;
+  top: 5%;
+  left: 5%;
 }

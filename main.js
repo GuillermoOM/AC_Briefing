@@ -1,48 +1,46 @@
 import * as THREE from "three";
 
-// Globals
-let camera, map_mesh, line, mission_info;
-
-const resolution = 512;
+// Constants
+const resolution = 256;
 const size = 1024;
 const max_zoom = size * 0.15;
 const min_zoom = size * 0.65;
-const rotation_speed = 0.1;
-const vectorZero = new THREE.Vector3(0.0,0.0,0.0);
+const rotation_speed = 0.08;
+const vectorZero = new THREE.Vector3(0.0, 0.0, 0.0);
+
+// Globals
+let camera, map_mesh, line, mission_info;
 
 // Inits
 const container = document.getElementById("container");
+const reset_view = document.getElementById("reset_view");
+const group_box = document.getElementById("groups");
 const renderer = new THREE.WebGLRenderer();
 const scene = new THREE.Scene();
 const loader = new THREE.TextureLoader();
 const clock = new THREE.Clock();
-renderer.setSize(window.innerWidth, window.innerHeight);
-container.appendChild(renderer.domElement);
-window.addEventListener("resize", onWindowResize);
-
 let screenX = 0.0;
 let screenY = 0.0;
 let group_coordinates = [0.0, 0.0, 0.0];
 let camera_target = vectorZero;
+let current_zoom = min_zoom;
 let zoomed_in = false;
 let highlighted = false;
 
 async function init() {
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  container.appendChild(renderer.domElement);
+  window.addEventListener("resize", onWindowResize);
+  reset_view.addEventListener("click", resetZoom);
   setup_camera();
   mission_info = await fetch("/map_info.json")
     .then((response) => response.json())
     .then((json) => {
       return json;
     });
+  load_groups();
   load_map(mission_info.map_file);
   create_line();
-
-  document.getElementById("groups").childNodes.forEach((element) => {
-    element.addEventListener("mouseenter", highlightObjective);
-    element.addEventListener("mouseout", removeHighlight);
-    element.addEventListener("click", zoomObjective);
-  });
-
   animate();
 }
 
@@ -57,6 +55,22 @@ function setup_camera() {
   camera.position.y = min_zoom;
 
   camera.lookAt(vectorZero);
+}
+
+function load_groups() {
+  const json_groups = mission_info.groups;
+  for (const group in json_groups) {
+    let div = document.createElement("div");
+    div.id = group;
+    div.className = "selection";
+    div.innerText = json_groups[group].name.toUpperCase();
+    group_box.appendChild(div);
+  }
+  document.getElementById("groups").childNodes.forEach((element) => {
+    element.addEventListener("mouseenter", highlightObjective);
+    element.addEventListener("mouseout", removeHighlight);
+    element.addEventListener("click", zoomObjective);
+  });
 }
 
 function load_map(map_file) {
@@ -75,9 +89,10 @@ function load_map(map_file) {
       bumpTexture: { value: map_heightMap },
       // Feed the scaling constant for the heightmap
       bumpScale: { value: 50 },
-      current_range: { value: size},
-      zoom: { value: size / size },
       selection: { value: false },
+      zoomed_in: { value: false },
+      current_range: { value: size },
+      zoom: { value: 1 },
       zone: { value: new THREE.Vector2(0.0, 0.0) },
     },
     vertexShader: `
@@ -115,6 +130,7 @@ function load_map(map_file) {
       uniform float current_range;
       uniform bool selection;
       uniform vec2 zone;
+      uniform bool zoomed_in;
   
       varying vec2 vUV;
       varying float vAmount;
@@ -123,23 +139,33 @@ function load_map(map_file) {
       void main()
       {
           float length = 100.0;
-          float border = 5.0;
-  
-          if ((-current_range < pos.y && pos.y < current_range) && (-current_range < pos.x && pos.x < current_range)){
-            if (selection && (pos.x > (zone.x - length) && pos.x < (zone.x + length)) && (pos.y > (zone.y - length) && pos.y < (zone.y + length))){
-              if ((pos.x > (zone.x - length + border) && pos.x < (zone.x + length - border)) && (pos.y > (zone.y - length + border) && pos.y < (zone.y + length - border))){
-                gl_FragColor = vec4(vAmount-0.2, vAmount+0.2, vAmount+0.4, 1.0);
+          float border = 3.0;
+
+          if (!zoomed_in){
+            if (selection){
+              if ((pos.x > (zone.x - length - border) && pos.x < (zone.x + length + border)) && (pos.y > (zone.y - length - border) && pos.y < (zone.y + length + border))){
+                if ((pos.x > (zone.x - length + border) && pos.x < (zone.x + length - border)) && (pos.y > (zone.y - length + border) && pos.y < (zone.y + length - border))) {
+                  gl_FragColor = vec4(vAmount-0.2, vAmount+0.2, vAmount+0.4, 1.0);
+                }
+                else {
+                  gl_FragColor = vec4(0.8,0.8,1.0, 1.0);
+                }
               }
               else{
-                gl_FragColor = vec4(0.8,0.8,1.0, 1.0);
+                gl_FragColor = vec4(vAmount-0.2, vAmount+0.2, vAmount+0.4, 1.0);
               }
             }
             else {
-                gl_FragColor = vec4(vAmount-0.2, vAmount+0.2, vAmount+0.4, 1.0);
+              gl_FragColor = vec4(vAmount-0.2, vAmount+0.2, vAmount+0.4, 1.0);
             }
           }
           else {
-              gl_FragColor = vec4(0,0,0, 1.0);
+            if ((pos.x > (zone.x - current_range) && pos.x < (zone.x + current_range)) && (pos.y > (zone.y - current_range) && pos.y < (zone.y + current_range))) {
+              gl_FragColor = vec4(vAmount-0.2, vAmount+0.2, vAmount+0.4, 1.0);
+            }
+            else {
+              gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
+            }
           }
       }
       `,
@@ -183,7 +209,7 @@ function highlightObjective(event) {
   }
 }
 
-function removeHighlight(event) {
+function removeHighlight() {
   map_mesh.material.uniforms.selection = {
     value: false,
   };
@@ -191,27 +217,47 @@ function removeHighlight(event) {
 }
 
 function zoomObjective(event) {
+  group_coordinates = mission_info.groups[event.target.id].coordinates;
+  camera_target.x = group_coordinates[0];
+  camera_target.y = group_coordinates[1];
+  camera_target.z = group_coordinates[2];
+  current_zoom = max_zoom;
+  const obj_coord = new THREE.Vector2(
+    group_coordinates[0],
+    -group_coordinates[2]
+  );
+  map_mesh.material.uniforms.zone = {
+    value: obj_coord,
+  };
+  map_mesh.material.uniforms.current_range = {
+    value: 100.0,
+  };
+  map_mesh.material.uniforms.zoomed_in = {
+    value: true,
+  };
+  removeHighlight();
+  zoomed_in = true;
+  reset_view.style.visibility = "visible";
+  group_box.style.visibility = "hidden";
+}
 
+function resetZoom() {
+  camera_target.x = 0.0;
+  camera_target.y = 0.0;
+  camera_target.z = 0.0;
+  current_zoom = min_zoom;
+  map_mesh.material.uniforms.zone = {
+    value: new THREE.Vector2(0.0, 0.0),
+  };
+  map_mesh.material.uniforms.zoomed_in = {
+    value: false,
+  };
+  zoomed_in = false;
+  reset_view.style.visibility = "hidden";
+  group_box.style.visibility = "visible";
 }
 
 // Updates
-function update_camera_orbit() {
-  const time = clock.getElapsedTime();
-  camera.position.x = Math.sin(time*rotation_speed)*min_zoom;
-  camera.position.z = Math.cos(time*rotation_speed)*min_zoom;
-  camera.position.y = min_zoom;
-  camera.lookAt(vectorZero);
-}
-
-function update_map() {
-  map_mesh.material.uniforms.current_range = {
-    value: size,
-  };
-  map_mesh.material.uniforms.zoom = {
-    value: size / size,
-  };
-}
-
 function update_objective_line(screenX, screenY, WorldX, WorldY, WorldZ) {
   // Convert screen coordinates to NDC
   if (highlighted) {
@@ -266,10 +312,19 @@ function update_objective_line(screenX, screenY, WorldX, WorldY, WorldZ) {
   }
 }
 
+function update_camera_orbit() {
+  const time = clock.getElapsedTime();
+  camera.position.x =
+    camera_target.x + Math.sin(time * rotation_speed) * current_zoom;
+  camera.position.z =
+    camera_target.z + Math.cos(time * rotation_speed) * current_zoom;
+  camera.position.y = camera_target.y + current_zoom;
+  camera.lookAt(camera_target);
+}
+
 function animate() {
   requestAnimationFrame(animate);
-  update_camera_orbit()
-  update_map();
+  update_camera_orbit();
   update_objective_line(
     screenX,
     screenY,
