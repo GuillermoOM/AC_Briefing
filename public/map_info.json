@@ -1,0 +1,45 @@
+{
+  "map_file": "/render.png",
+  "groups": {
+    "Attack_Group": {
+      "name": "Attack Group",
+      "coordinates": [150.0, 0.0, 0.0],
+      "items": [
+        {
+          "name": "Mobius 1",
+          "class": "JET",
+          "color": "yellow",
+          "coordinates": [0.0, 0.0, 0.0],
+          "description": "Placeholder"
+        }
+      ]
+    },
+    "Primary_Objective": {
+      "name": "Primary Objective",
+      "coordinates": [0.0, 0.0, 150.0],
+      "items": [
+        {
+          "name": "SAM_1",
+          "class": "SAM",
+          "color": "red",
+          "coordinates": [0.0, 0.0, 0.0],
+          "description": "Placeholder"
+        },
+        {
+          "name": "SAM_2",
+          "class": "SAM",
+          "color": "red",
+          "coordinates": [0.0, 0.0, 0.0],
+          "description": "Placeholder"
+        },
+        {
+          "name": "SAM_3",
+          "class": "SAM",
+          "color": "red",
+          "coordinates": [0.0, 0.0, 0.0],
+          "description": "Placeholder"
+        }
+      ]
+    }
+  }
+}
