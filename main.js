@@ -1,12 +1,12 @@
 import * as THREE from "three";
+import { MathUtils } from "three";
 
 // Constants
 const resolution = 256;
 const size = 1024;
 const max_zoom = size * 0.15;
 const min_zoom = size * 0.65;
-const rotation_speed = 0.08;
-const vectorZero = new THREE.Vector3(0.0, 0.0, 0.0);
+const rotation_speed = 0.05;
 
 // Globals
 let camera, map_mesh, line, mission_info;
@@ -22,7 +22,7 @@ const clock = new THREE.Clock();
 let screenX = 0.0;
 let screenY = 0.0;
 let group_coordinates = [0.0, 0.0, 0.0];
-let camera_target = vectorZero;
+let camera_target = new THREE.Vector3(0.0, 0.0, 0.0);
 let current_zoom = min_zoom;
 let zoomed_in = false;
 let highlighted = false;
@@ -51,10 +51,12 @@ function setup_camera() {
     0.1,
     size * 2
   );
-  camera.position.z = min_zoom;
-  camera.position.y = min_zoom;
-
-  camera.lookAt(vectorZero);
+  camera.rotation.z = Math.PI;
+  camera.rotation.x = -Math.PI / 4;
+  camera.rotateOnWorldAxis(
+    new THREE.Vector3(0.0, 0.0, 1.0),
+    THREE.MathUtils.degToRad(90)
+  );
 }
 
 function load_groups() {
@@ -173,14 +175,13 @@ function load_map(map_file) {
   });
   map_mesh = new THREE.Points(map_geometry, map_material);
   scene.add(map_mesh);
-  map_mesh.lookAt(new THREE.Vector3(0, 1, 0));
 }
 
 function create_line() {
   // camera coords to world coords
   const points = [];
-  points.push(vectorZero);
-  points.push(vectorZero);
+  points.push(new THREE.Vector3(0.0, 0.0, 0.0));
+  points.push(new THREE.Vector3(0.0, 0.0, 0.0));
   const geometry = new THREE.BufferGeometry().setFromPoints(points);
   const material = new THREE.LineBasicMaterial({ color: 0xffffff });
   line = new THREE.Line(geometry, material);
@@ -196,8 +197,8 @@ function highlightObjective(event) {
     };
     const obj_coord = new THREE.Vector3(
       group_coordinates[0],
-      -group_coordinates[2],
-      group_coordinates[1]
+      group_coordinates[1],
+      group_coordinates[2]
     );
     map_mesh.material.uniforms.zone = {
       value: obj_coord,
@@ -221,10 +222,15 @@ function zoomObjective(event) {
   camera_target.x = group_coordinates[0];
   camera_target.y = group_coordinates[1];
   camera_target.z = group_coordinates[2];
+  move_camera(
+    camera.position.x + camera_target.x,
+    camera.position.y + camera_target.y,
+    camera.position.z + camera_target.z
+  );
   current_zoom = max_zoom;
   const obj_coord = new THREE.Vector2(
     group_coordinates[0],
-    -group_coordinates[2]
+    group_coordinates[1]
   );
   map_mesh.material.uniforms.zone = {
     value: obj_coord,
@@ -242,10 +248,15 @@ function zoomObjective(event) {
 }
 
 function resetZoom() {
+  current_zoom = min_zoom;
   camera_target.x = 0.0;
   camera_target.y = 0.0;
   camera_target.z = 0.0;
-  current_zoom = min_zoom;
+  move_camera(
+    camera.position.x - group_coordinates[0],
+    camera.position.y - group_coordinates[1],
+    camera.position.z - group_coordinates[2]
+  );
   map_mesh.material.uniforms.zone = {
     value: new THREE.Vector2(0.0, 0.0),
   };
@@ -263,7 +274,7 @@ function update_objective_line(screenX, screenY, WorldX, WorldY, WorldZ) {
   if (highlighted) {
     const ndcX = (screenX / window.innerWidth) * 2 - 1;
     const ndcY = -(screenY / window.innerHeight) * 2 + 1;
-    const ndcZ = 0.5; // Depth value for the near plane
+    const ndcZ = 1.0; // Depth value for the near plane
 
     // Create a vector representing NDC coordinates
     const ndcVector = new THREE.Vector3(ndcX, ndcY, ndcZ);
@@ -312,19 +323,37 @@ function update_objective_line(screenX, screenY, WorldX, WorldY, WorldZ) {
   }
 }
 
-function update_camera_orbit() {
+function update_camera() {
   const time = clock.getElapsedTime();
-  camera.position.x =
+  const x_pos =
     camera_target.x + Math.sin(time * rotation_speed) * current_zoom;
-  camera.position.z =
-    camera_target.z + Math.cos(time * rotation_speed) * current_zoom;
-  camera.position.y = camera_target.y + current_zoom;
-  camera.lookAt(camera_target);
+  const y_pos =
+    camera_target.y + Math.cos(time * rotation_speed) * current_zoom;
+  const z_pos = camera_target.z + current_zoom;
+
+  const relative_camera_pos = new THREE.Vector2(
+    camera.position.x - camera_target.x,
+    camera.position.y - camera_target.y
+  );
+  const relative_new_pos = new THREE.Vector2(
+    x_pos - camera_target.x,
+    y_pos - camera_target.y
+  );
+  const angle = relative_new_pos.angleTo(relative_camera_pos);
+
+  move_camera(x_pos, y_pos, z_pos);
+  camera.rotateOnWorldAxis(new THREE.Vector3(0.0, 0.0, 1.0), -angle);
+}
+
+function move_camera(targetX, targetY, targetZ) {
+  camera.position.x = targetX;
+  camera.position.y = targetY;
+  camera.position.z = targetZ;
 }
 
 function animate() {
   requestAnimationFrame(animate);
-  update_camera_orbit();
+  update_camera();
   update_objective_line(
     screenX,
     screenY,
@@ -332,14 +361,13 @@ function animate() {
     group_coordinates[1],
     group_coordinates[2]
   );
-
+  
   renderer.render(scene, camera);
 }
 
 function onWindowResize() {
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
-
   renderer.setSize(window.innerWidth, window.innerHeight);
 }
 
