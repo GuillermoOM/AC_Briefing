@@ -1,5 +1,4 @@
 import * as THREE from "three";
-import { MathUtils } from "three";
 
 // Constants
 const resolution = 256;
@@ -7,6 +6,7 @@ const size = 1024;
 const max_zoom = size * 0.15;
 const min_zoom = size * 0.65;
 const rotation_speed = 0.05;
+const lerp_time = 1.0;
 
 // Globals
 let camera, map_mesh, line, mission_info;
@@ -18,13 +18,18 @@ const group_box = document.getElementById("groups");
 const renderer = new THREE.WebGLRenderer();
 const scene = new THREE.Scene();
 const loader = new THREE.TextureLoader();
-const clock = new THREE.Clock();
+const camera_clock = new THREE.Clock();
+const lerp_clock = new THREE.Clock();
+let zoomingIn = false;
+let zoomingOut = false;
 let screenX = 0.0;
 let screenY = 0.0;
 let group_coordinates = [0.0, 0.0, 0.0];
 let camera_target = new THREE.Vector3(0.0, 0.0, 0.0);
+let old_orbit_pos = new THREE.Vector2(0.0, 0.0);
+let zoom_start_pos = new THREE.Vector3(0.0, 0.0, 0.0);
+let lerp_position = new THREE.Vector3(0.0, 0.0, 0.0);
 let current_zoom = min_zoom;
-let zoomed_in = false;
 let highlighted = false;
 
 async function init() {
@@ -92,10 +97,10 @@ function load_map(map_file) {
       // Feed the scaling constant for the heightmap
       bumpScale: { value: 50 },
       selection: { value: false },
-      zoomed_in: { value: false },
-      current_range: { value: size },
-      zoom: { value: 1 },
+      highlight_zone: { value: new THREE.Vector2(0.0, 0.0) },
       zone: { value: new THREE.Vector2(0.0, 0.0) },
+      current_range: { value: size },
+      zoom: { value: current_zoom },
     },
     vertexShader: `
       uniform sampler2D bumpTexture;
@@ -132,7 +137,7 @@ function load_map(map_file) {
       uniform float current_range;
       uniform bool selection;
       uniform vec2 zone;
-      uniform bool zoomed_in;
+      uniform vec2 highlight_zone;
   
       varying vec2 vUV;
       varying float vAmount;
@@ -143,31 +148,31 @@ function load_map(map_file) {
           float length = 100.0;
           float border = 3.0;
 
-          if (!zoomed_in){
-            if (selection){
-              if ((pos.x > (zone.x - length - border) && pos.x < (zone.x + length + border)) && (pos.y > (zone.y - length - border) && pos.y < (zone.y + length + border))){
-                if ((pos.x > (zone.x - length + border) && pos.x < (zone.x + length - border)) && (pos.y > (zone.y - length + border) && pos.y < (zone.y + length - border))) {
-                  gl_FragColor = vec4(vAmount-0.2, vAmount+0.2, vAmount+0.4, 1.0);
-                }
-                else {
-                  gl_FragColor = vec4(0.8,0.8,1.0, 1.0);
-                }
-              }
-              else{
+          if (selection){
+            if ((pos.x > (highlight_zone.x - length - border) && pos.x < (highlight_zone.x + length + border)) && (pos.y > (highlight_zone.y - length - border) && pos.y < (highlight_zone.y + length + border))){
+              if ((pos.x > (highlight_zone.x - length + border) && pos.x < (highlight_zone.x + length - border)) && (pos.y > (highlight_zone.y - length + border) && pos.y < (highlight_zone.y + length - border))) {
                 gl_FragColor = vec4(vAmount-0.2, vAmount+0.2, vAmount+0.4, 1.0);
               }
+              else {
+                gl_FragColor = vec4(0.8,0.8,1.0, 1.0);
+              }
             }
-            else {
-              gl_FragColor = vec4(vAmount-0.2, vAmount+0.2, vAmount+0.4, 1.0);
+            else{
+              if ((pos.x > (zone.x - current_range) && pos.x < (zone.x + current_range)) && (pos.y > (zone.y - current_range) && pos.y < (zone.y + current_range))) {
+                gl_FragColor = vec4(vAmount-0.2, vAmount+0.2, vAmount+0.4, 1.0);
+              }
+              else {
+                gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
+              }
             }
           }
           else {
-            if ((pos.x > (zone.x - current_range) && pos.x < (zone.x + current_range)) && (pos.y > (zone.y - current_range) && pos.y < (zone.y + current_range))) {
-              gl_FragColor = vec4(vAmount-0.2, vAmount+0.2, vAmount+0.4, 1.0);
-            }
-            else {
-              gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
-            }
+              if ((pos.x > (zone.x - current_range) && pos.x < (zone.x + current_range)) && (pos.y > (zone.y - current_range) && pos.y < (zone.y + current_range))) {
+                gl_FragColor = vec4(vAmount-0.2, vAmount+0.2, vAmount+0.4, 1.0);
+              }
+              else {
+                gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
+              }
           }
       }
       `,
@@ -190,24 +195,22 @@ function create_line() {
 
 // Events
 function highlightObjective(event) {
-  if (!zoomed_in) {
-    group_coordinates = mission_info.groups[event.target.id].coordinates;
-    map_mesh.material.uniforms.selection = {
-      value: true,
-    };
-    const obj_coord = new THREE.Vector3(
-      group_coordinates[0],
-      group_coordinates[1],
-      group_coordinates[2]
-    );
-    map_mesh.material.uniforms.zone = {
-      value: obj_coord,
-    };
-    const rect = event.target.getBoundingClientRect();
-    screenX = rect.right;
-    screenY = rect.y + rect.height / 2;
-    highlighted = true;
-  }
+  group_coordinates = mission_info.groups[event.target.id].coordinates;
+  map_mesh.material.uniforms.selection = {
+    value: true,
+  };
+  const obj_coord = new THREE.Vector3(
+    group_coordinates[0],
+    group_coordinates[1],
+    group_coordinates[2]
+  );
+  map_mesh.material.uniforms.highlight_zone = {
+    value: obj_coord,
+  };
+  const rect = event.target.getBoundingClientRect();
+  screenX = rect.right;
+  screenY = rect.y + rect.height / 2;
+  highlighted = true;
 }
 
 function removeHighlight() {
@@ -222,48 +225,31 @@ function zoomObjective(event) {
   camera_target.x = group_coordinates[0];
   camera_target.y = group_coordinates[1];
   camera_target.z = group_coordinates[2];
-  move_camera(
-    camera.position.x + camera_target.x,
-    camera.position.y + camera_target.y,
-    camera.position.z + camera_target.z
-  );
-  current_zoom = max_zoom;
-  const obj_coord = new THREE.Vector2(
-    group_coordinates[0],
-    group_coordinates[1]
-  );
-  map_mesh.material.uniforms.zone = {
-    value: obj_coord,
-  };
-  map_mesh.material.uniforms.current_range = {
-    value: 100.0,
-  };
-  map_mesh.material.uniforms.zoomed_in = {
-    value: true,
-  };
+  if (zoomingOut) {
+    Object.assign(zoom_start_pos, ...lerp_position);
+  } else {
+    Object.assign(zoom_start_pos, ...camera_target);
+  }
+
   removeHighlight();
-  zoomed_in = true;
+  lerp_clock.start();
+  zoomingIn = true;
   reset_view.style.visibility = "visible";
   group_box.style.visibility = "hidden";
 }
 
 function resetZoom() {
-  current_zoom = min_zoom;
   camera_target.x = 0.0;
   camera_target.y = 0.0;
   camera_target.z = 0.0;
-  move_camera(
-    camera.position.x - group_coordinates[0],
-    camera.position.y - group_coordinates[1],
-    camera.position.z - group_coordinates[2]
-  );
-  map_mesh.material.uniforms.zone = {
-    value: new THREE.Vector2(0.0, 0.0),
-  };
-  map_mesh.material.uniforms.zoomed_in = {
-    value: false,
-  };
-  zoomed_in = false;
+  if (zoomingIn) {
+    Object.assign(zoom_start_pos, ...lerp_position);
+  } else {
+    Object.assign(zoom_start_pos, ...camera_target);
+  }
+
+  lerp_clock.start();
+  zoomingOut = true;
   reset_view.style.visibility = "hidden";
   group_box.style.visibility = "visible";
 }
@@ -323,32 +309,64 @@ function update_objective_line(screenX, screenY, WorldX, WorldY, WorldZ) {
   }
 }
 
-function update_camera() {
-  const time = clock.getElapsedTime();
-  const x_pos =
-    camera_target.x + Math.sin(time * rotation_speed) * current_zoom;
-  const y_pos =
-    camera_target.y + Math.cos(time * rotation_speed) * current_zoom;
-  const z_pos = camera_target.z + current_zoom;
-
-  const relative_camera_pos = new THREE.Vector2(
-    camera.position.x - camera_target.x,
-    camera.position.y - camera_target.y
-  );
-  const relative_new_pos = new THREE.Vector2(
-    x_pos - camera_target.x,
-    y_pos - camera_target.y
-  );
-  const angle = relative_new_pos.angleTo(relative_camera_pos);
-
-  move_camera(x_pos, y_pos, z_pos);
-  camera.rotateOnWorldAxis(new THREE.Vector3(0.0, 0.0, 1.0), -angle);
+function update_map() {
+  const lerp = THREE.MathUtils.lerp(0, size * 2.4, current_zoom / size);
+  map_mesh.material.uniforms.zoom = {
+    value: size / lerp,
+  };
 }
 
-function move_camera(targetX, targetY, targetZ) {
-  camera.position.x = targetX;
-  camera.position.y = targetY;
-  camera.position.z = targetZ;
+function update_camera() {
+  const time = camera_clock.getElapsedTime();
+  const new_orbit_pos = new THREE.Vector2(
+    Math.sin(time * rotation_speed),
+    Math.cos(time * rotation_speed)
+  );
+  const angle = old_orbit_pos.angleTo(new_orbit_pos);
+
+  let lerp_zoom_perc = 0.0;
+  let lerp_move_perc = 0.0;
+  if (zoomingIn || zoomingOut) {
+    let lerp_elapsed_time = lerp_clock.getElapsedTime();
+    if (lerp_elapsed_time < lerp_time) {
+      lerp_zoom_perc = THREE.MathUtils.mapLinear(
+        lerp_elapsed_time,
+        0,
+        lerp_time,
+        0.0,
+        1.0
+      );
+      lerp_move_perc = THREE.MathUtils.mapLinear(
+        lerp_elapsed_time,
+        0,
+        lerp_time*20,
+        0.0,
+        1.0
+      );
+      if (zoomingIn) {
+        current_zoom = THREE.MathUtils.lerp(min_zoom, max_zoom, lerp_zoom_perc);
+      } else {
+        current_zoom = THREE.MathUtils.lerp(max_zoom, min_zoom, lerp_zoom_perc);
+      }
+      lerp_position = zoom_start_pos.lerp(camera_target, lerp_move_perc);
+    } else {
+      zoomingIn = false;
+      zoomingOut = false;
+      lerp_clock.stop();
+    }
+    map_mesh.material.uniforms.current_range = {
+      value: current_zoom,
+    };
+    map_mesh.material.uniforms.zone = {
+      value: new THREE.Vector2(lerp_position.x, lerp_position.y),
+    };
+  }
+  camera.position.x = new_orbit_pos.x * current_zoom + lerp_position.x;
+  camera.position.y = new_orbit_pos.y * current_zoom + lerp_position.y;
+  camera.position.z = current_zoom + lerp_position.z;
+
+  camera.rotateOnWorldAxis(new THREE.Vector3(0.0, 0.0, 1.0), -angle);
+  old_orbit_pos = new_orbit_pos;
 }
 
 function animate() {
@@ -361,7 +379,7 @@ function animate() {
     group_coordinates[1],
     group_coordinates[2]
   );
-  
+  update_map();
   renderer.render(scene, camera);
 }
 
