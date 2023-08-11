@@ -40,7 +40,7 @@ body {
 }
 
 #groups {
-  width: 20%;
+  width: 15%;
   top: 15%;
   left: 5%;
 }
@@ -55,8 +55,17 @@ body {
   background-color: rgba(25, 65, 110, 0.432);
 }
 
+#group_info {
+  background-color: rgba(25, 65, 110, 0.432);
+  padding: 1.5%;
+  visibility: hidden;
+  width: 15%;
+  top: 15%;
+  right: 5%;
+}
+
 .info_name {
-  font-size: 30px;
+  font-size: 25px;
 }
 
 .info_item_name {
@@ -71,20 +80,11 @@ body {
   margin-bottom: 5%;
 }
 
-#group_info {
-  background-color: rgba(25, 65, 110, 0.432);
-  padding: 1.5%;
-  visibility: hidden;
-  width: 20%;
-  top: 15%;
-  right: 5%;
-}
-
 #map {
-  top: 50%;
+  bottom: 10%;
   left: 5%;
-  width: 20vw;
-  height: 20vw;
+  width: 15vw;
+  height: 15vw;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -92,7 +92,7 @@ body {
 
 #map_img_mask {
   position: absolute;
-  background-color: rgba(4, 36, 78, 0.568);
+  background-color: rgba(5, 45, 78, 0.596);
   width: 100%;
   height: 100%;
 }

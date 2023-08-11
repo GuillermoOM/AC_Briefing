@@ -201,6 +201,7 @@ function create_line() {
 
 // Events
 function highlightObjective(event) {
+  if (reset_view.style.visibility != "visible") {
     group_coordinates = mission_info.groups[event.target.id].coordinates;
     map_mesh.material.uniforms.selection = {
       value: true,
@@ -217,6 +218,7 @@ function highlightObjective(event) {
     screenX = rect.right;
     screenY = rect.y + rect.height / 2;
     highlighted = true;
+  }
 }
 
 function removeHighlight() {
@@ -228,18 +230,20 @@ function removeHighlight() {
 
 function zoomObjective(event) {
   // get group info
-  group_info_box.textContent = '';
+  group_info_box.textContent = "";
   let div_name = document.createElement("div");
   div_name.className = "info_name";
-  div_name.textContent = mission_info.groups[event.target.id].name.toUpperCase();
+  div_name.textContent =
+    mission_info.groups[event.target.id].name.toUpperCase();
   group_info_box.appendChild(div_name);
 
   let coord_div = document.createElement("div");
   coord_div.className = "info_item_coords";
-  coord_div.innerText = "[ " + mission_info.groups[event.target.id].coordinates + " ]";
+  coord_div.innerText =
+    "[ " + mission_info.groups[event.target.id].coordinates + " ]";
   group_info_box.appendChild(coord_div);
 
-  let group_items = mission_info.groups[event.target.id].items
+  let group_items = mission_info.groups[event.target.id].items;
   for (const item in group_items) {
     let div = document.createElement("div");
     div.className = "info_item_name";
@@ -279,7 +283,7 @@ function resetZoom() {
   } else {
     Object.assign(zoom_start_pos, ...camera_target);
   }
-  
+
   zoomingOut = true;
   lerp_clock.start();
   // group_box.style.visibility = "visible";
@@ -319,31 +323,38 @@ function update_camera() {
     map_mesh.material.uniforms.zone = {
       value: new THREE.Vector2(lerp_position.x, lerp_position.y),
     };
-  }
-  else {
+  } else {
     lerp_position = camera_target;
   }
   camera.position.x = new_orbit_pos.x * lerp_position.z + lerp_position.x;
   camera.position.y = new_orbit_pos.y * lerp_position.z + lerp_position.y;
   camera.position.z = lerp_position.z;
   camera.rotateOnWorldAxis(new THREE.Vector3(0.0, 0.0, 1.0), -angle);
-  update_minimap(lerp_position.x, lerp_position.y, lerp_position.z)
+  update_minimap(lerp_position.x, lerp_position.y, lerp_position.z);
 }
 
 function update_map_mesh() {
   map_mesh.material.uniforms.zoom = {
-    value: min_zoom/lerp_position.z,
+    value: min_zoom / lerp_position.z,
   };
 }
 
 function update_minimap(x, y, zoom) {
-  map_x_axis.style.left = THREE.MathUtils.mapLinear(x, -size/2, size/2, 0, 100)+'%';
-  map_y_axis.style.top = THREE.MathUtils.mapLinear(y, -size/2, size/2, 0, 100)+'%';
+  map_x_axis.style.left =
+    THREE.MathUtils.mapLinear(x, -size / 2, size / 2, 0, 100) + "%";
+  map_y_axis.style.top =
+    THREE.MathUtils.mapLinear(y, -size / 2, size / 2, 0, 100) + "%";
   let box_size = THREE.MathUtils.mapLinear(zoom, 0, min_zoom, 0, 100);
-  map_zoom_zone.style.width = box_size+'%';
-  map_zoom_zone.style.height = box_size+'%';
-  map_zoom_zone.style.left = (THREE.MathUtils.mapLinear(x, -size/2, size/2, 0, 100)-box_size/2)+'%';
-  map_zoom_zone.style.top = (THREE.MathUtils.mapLinear(y, -size/2, size/2, 0, 100)-box_size/2)+'%';
+  map_zoom_zone.style.width = box_size + "%";
+  map_zoom_zone.style.height = box_size + "%";
+  map_zoom_zone.style.left =
+    THREE.MathUtils.mapLinear(x, -size / 2, size / 2, 0, 100) -
+    box_size / 2 +
+    "%";
+  map_zoom_zone.style.top =
+    THREE.MathUtils.mapLinear(y, -size / 2, size / 2, 0, 100) -
+    box_size / 2 +
+    "%";
 }
 
 function update_objective_line(screenX, screenY, WorldX, WorldY, WorldZ) {
