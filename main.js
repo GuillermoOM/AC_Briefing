@@ -16,6 +16,10 @@ const container = document.getElementById("container");
 const reset_view = document.getElementById("reset_view");
 const group_box = document.getElementById("groups");
 const group_info_box = document.getElementById("group_info");
+const map_img = document.getElementById("map_img");
+const map_zoom_zone = document.getElementById("map_zoom_zone");
+const map_x_axis = document.getElementById("map_x_axis");
+const map_y_axis = document.getElementById("map_y_axis");
 const renderer = new THREE.WebGLRenderer();
 const scene = new THREE.Scene();
 const loader = new THREE.TextureLoader();
@@ -46,6 +50,7 @@ async function init() {
     });
   load_groups();
   load_map(mission_info.map_file);
+  map_img.setAttribute("src", mission_info.map_file);
   create_line();
   animate();
 }
@@ -322,12 +327,23 @@ function update_camera() {
   camera.position.y = new_orbit_pos.y * lerp_position.z + lerp_position.y;
   camera.position.z = lerp_position.z;
   camera.rotateOnWorldAxis(new THREE.Vector3(0.0, 0.0, 1.0), -angle);
+  update_minimap(lerp_position.x, lerp_position.y, lerp_position.z)
 }
 
-function update_map() {
+function update_map_mesh() {
   map_mesh.material.uniforms.zoom = {
     value: min_zoom/lerp_position.z,
   };
+}
+
+function update_minimap(x, y, zoom) {
+  map_x_axis.style.left = THREE.MathUtils.mapLinear(x, -size/2, size/2, 0, 100)+'%';
+  map_y_axis.style.top = THREE.MathUtils.mapLinear(y, -size/2, size/2, 0, 100)+'%';
+  let box_size = THREE.MathUtils.mapLinear(zoom, 0, min_zoom, 0, 100);
+  map_zoom_zone.style.width = box_size+'%';
+  map_zoom_zone.style.height = box_size+'%';
+  map_zoom_zone.style.left = (THREE.MathUtils.mapLinear(x, -size/2, size/2, 0, 100)-box_size/2)+'%';
+  map_zoom_zone.style.top = (THREE.MathUtils.mapLinear(y, -size/2, size/2, 0, 100)-box_size/2)+'%';
 }
 
 function update_objective_line(screenX, screenY, WorldX, WorldY, WorldZ) {
@@ -394,7 +410,7 @@ function animate() {
     group_coordinates[1],
     group_coordinates[2]
   );
-  update_map();
+  update_map_mesh();
   renderer.render(scene, camera);
 }
 

@@ -1,14 +1,14 @@
 @font-face {
-    font-family: 'ACES04';
-    src: url('/fonts/ACES04.ttf') format('truetype');
-    font-weight: normal;
-    font-style: normal;
+  font-family: "ACES04";
+  src: url("/fonts/ACES04.ttf") format("truetype");
+  font-weight: normal;
+  font-style: normal;
 }
 
 body {
   margin: 0;
   color: #fff;
-  font-family: 'ACES04';
+  font-family: "ACES04";
   font-size: 20px;
   line-height: 24px;
   overscroll-behavior: none;
@@ -32,11 +32,11 @@ body {
 }
 
 .selection {
-    padding: 5%;
+  padding: 5%;
 }
 
 .selection:hover {
-    background-color: rgba(25, 65, 110, 0.432);
+  background-color: rgba(25, 65, 110, 0.432);
 }
 
 #groups {
@@ -63,7 +63,7 @@ body {
   margin-bottom: 5%;
 }
 
-.info_item_name:last-child{
+.info_item_name:last-child {
   margin-bottom: 0%;
 }
 
@@ -78,4 +78,57 @@ body {
   width: 20%;
   top: 15%;
   right: 5%;
+}
+
+#map {
+  top: 50%;
+  left: 5%;
+  width: 20vw;
+  height: 20vw;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+#map_img_mask {
+  position: absolute;
+  background-color: rgba(4, 36, 78, 0.568);
+  width: 100%;
+  height: 100%;
+}
+
+#map_img {
+  height: 100%;
+  width: 100%;
+}
+
+#map_zoom_zone {
+  position: absolute;
+  left: 0%;
+  top: 0%;
+  height: 50%;
+  width: 50%;
+  border-style: solid;
+  border-width: 2px;
+  border-color: white;
+}
+
+#map_x_axis {
+  position: absolute;
+  height: 100%;
+  width: 0%;
+  left: 0%;
+  border-style: solid;
+  border-width: 1px;
+  border-color: white;
+}
+
+#map_y_axis {
+  position: absolute;
+  height: 0%;
+  width: 100%;
+  top: 0%;
+  border-style: solid;
+  border-width: 1px;
+  border-color: white;
 }
