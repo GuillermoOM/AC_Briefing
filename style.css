@@ -31,18 +31,17 @@ body {
   z-index: 1;
 }
 
-.selection {
+#groups {
+  top: 15%;
+  left: 5%;
+}
+
+.group_selection {
   padding: 5%;
 }
 
-.selection:hover {
+.group_selection:hover {
   background-color: rgba(25, 65, 110, 0.432);
-}
-
-#groups {
-  width: 15%;
-  top: 15%;
-  left: 5%;
 }
 
 #reset_view {
@@ -59,7 +58,6 @@ body {
   background-color: rgba(25, 65, 110, 0.432);
   padding: 1.5%;
   visibility: hidden;
-  width: 15%;
   top: 15%;
   right: 5%;
 }
@@ -81,10 +79,10 @@ body {
 }
 
 #map {
-  bottom: 10%;
+  bottom: 5vw;
   left: 5%;
-  width: 15vw;
-  height: 15vw;
+  width: 25vh;
+  height: 25vh;
   display: flex;
   justify-content: center;
   align-items: center;

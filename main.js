@@ -75,7 +75,7 @@ function load_groups() {
   for (const group in json_groups) {
     let div = document.createElement("div");
     div.id = group;
-    div.className = "selection";
+    div.className = "group_selection";
     div.innerText = json_groups[group].name.toUpperCase();
     group_box.appendChild(div);
   }
