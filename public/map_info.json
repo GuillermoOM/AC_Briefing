@@ -3,7 +3,7 @@
   "groups": {
     "Attack_Group": {
       "name": "Attack Group",
-      "coordinates": [0.0, 0.0, 0.0],
+      "coordinates": [0.0, -300.0, 0.0],
       "items": [
         {
           "name": "Mobius 1",
@@ -16,7 +16,7 @@
     },
     "Primary_Objective": {
       "name": "Primary Objective",
-      "coordinates": [0.0, -300.0, 0.0],
+      "coordinates": [-200.0, 250.0, 0.0],
       "items": [
         {
           "name": "SAM_1",
@@ -36,6 +36,19 @@
           "name": "SAM_3",
           "class": "SAM",
           "color": "red",
+          "coordinates": [0.0, 0.0, 0.0],
+          "description": "Placeholder"
+        }
+      ]
+    },
+    "Satellites": {
+      "name": "Radar",
+      "coordinates": [250.0, 300.0, 0.0],
+      "items": [
+        {
+          "name": "Eye",
+          "class": "JET",
+          "color": "yellow",
           "coordinates": [0.0, 0.0, 0.0],
           "description": "Placeholder"
         }

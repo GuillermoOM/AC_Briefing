@@ -6,7 +6,7 @@ const size = 1024;
 const max_zoom = size * 0.15;
 const min_zoom = size * 0.65;
 const rotation_speed = 0.05;
-const lerp_time = 1.0;
+const lerp_time = 2.0;
 
 // Globals
 let camera, map_mesh, line, mission_info;
@@ -25,11 +25,10 @@ let zoomingOut = false;
 let screenX = 0.0;
 let screenY = 0.0;
 let group_coordinates = [0.0, 0.0, 0.0];
-let camera_target = new THREE.Vector3(0.0, 0.0, 0.0);
+let camera_target = new THREE.Vector3(0.0, 0.0, min_zoom);
+let lerp_position = new THREE.Vector3(0.0, 0.0, min_zoom);
+let zoom_start_pos = new THREE.Vector3(0.0, 0.0, min_zoom);
 let old_orbit_pos = new THREE.Vector2(0.0, 0.0);
-let zoom_start_pos = new THREE.Vector3(0.0, 0.0, 0.0);
-let lerp_position = new THREE.Vector3(0.0, 0.0, 0.0);
-let current_zoom = min_zoom;
 let highlighted = false;
 
 async function init() {
@@ -100,7 +99,7 @@ function load_map(map_file) {
       highlight_zone: { value: new THREE.Vector2(0.0, 0.0) },
       zone: { value: new THREE.Vector2(0.0, 0.0) },
       current_range: { value: size },
-      zoom: { value: current_zoom },
+      zoom: { value: min_zoom },
     },
     vertexShader: `
       uniform sampler2D bumpTexture;
@@ -195,22 +194,22 @@ function create_line() {
 
 // Events
 function highlightObjective(event) {
-  group_coordinates = mission_info.groups[event.target.id].coordinates;
-  map_mesh.material.uniforms.selection = {
-    value: true,
-  };
-  const obj_coord = new THREE.Vector3(
-    group_coordinates[0],
-    group_coordinates[1],
-    group_coordinates[2]
-  );
-  map_mesh.material.uniforms.highlight_zone = {
-    value: obj_coord,
-  };
-  const rect = event.target.getBoundingClientRect();
-  screenX = rect.right;
-  screenY = rect.y + rect.height / 2;
-  highlighted = true;
+    group_coordinates = mission_info.groups[event.target.id].coordinates;
+    map_mesh.material.uniforms.selection = {
+      value: true,
+    };
+    const obj_coord = new THREE.Vector3(
+      group_coordinates[0],
+      group_coordinates[1],
+      group_coordinates[2]
+    );
+    map_mesh.material.uniforms.highlight_zone = {
+      value: obj_coord,
+    };
+    const rect = event.target.getBoundingClientRect();
+    screenX = rect.right;
+    screenY = rect.y + rect.height / 2;
+    highlighted = true;
 }
 
 function removeHighlight() {
@@ -224,37 +223,90 @@ function zoomObjective(event) {
   group_coordinates = mission_info.groups[event.target.id].coordinates;
   camera_target.x = group_coordinates[0];
   camera_target.y = group_coordinates[1];
-  camera_target.z = group_coordinates[2];
-  if (zoomingOut) {
+  camera_target.z = group_coordinates[2] + max_zoom;
+  if (zoomingOut || zoomingIn) {
     Object.assign(zoom_start_pos, ...lerp_position);
+    lerp_clock.stop();
   } else {
     Object.assign(zoom_start_pos, ...camera_target);
   }
-
-  removeHighlight();
-  lerp_clock.start();
+  map_mesh.material.uniforms.selection = {
+    value: false,
+  };
+  highlighted = false;
   zoomingIn = true;
+  lerp_clock.start();
+  // group_box.style.visibility = "hidden";
   reset_view.style.visibility = "visible";
-  group_box.style.visibility = "hidden";
 }
 
 function resetZoom() {
   camera_target.x = 0.0;
   camera_target.y = 0.0;
-  camera_target.z = 0.0;
-  if (zoomingIn) {
+  camera_target.z = min_zoom;
+  if (zoomingOut || zoomingIn) {
     Object.assign(zoom_start_pos, ...lerp_position);
+    lerp_clock.stop();
   } else {
     Object.assign(zoom_start_pos, ...camera_target);
   }
-
-  lerp_clock.start();
+  
   zoomingOut = true;
+  lerp_clock.start();
+  // group_box.style.visibility = "visible";
   reset_view.style.visibility = "hidden";
-  group_box.style.visibility = "visible";
 }
 
 // Updates
+function update_camera() {
+  const time = camera_clock.getElapsedTime();
+  const new_orbit_pos = new THREE.Vector2(
+    Math.sin(time * rotation_speed),
+    Math.cos(time * rotation_speed)
+  );
+  const angle = old_orbit_pos.angleTo(new_orbit_pos);
+  old_orbit_pos = new_orbit_pos;
+
+  let lerp_move_perc = 0.0;
+  if (zoomingIn || zoomingOut) {
+    let lerp_elapsed_time = lerp_clock.getElapsedTime();
+    if (lerp_elapsed_time < lerp_time) {
+      lerp_move_perc = THREE.MathUtils.mapLinear(
+        lerp_elapsed_time,
+        0,
+        lerp_time,
+        0.0,
+        1.0
+      );
+      lerp_position = zoom_start_pos.lerp(camera_target, lerp_move_perc);
+    } else {
+      zoomingIn = false;
+      zoomingOut = false;
+      lerp_clock.stop();
+    }
+    map_mesh.material.uniforms.current_range = {
+      value: lerp_position.z,
+    };
+    map_mesh.material.uniforms.zone = {
+      value: new THREE.Vector2(lerp_position.x, lerp_position.y),
+    };
+  }
+  else {
+    lerp_position = camera_target;
+  }
+  camera.position.x = new_orbit_pos.x * lerp_position.z + lerp_position.x;
+  camera.position.y = new_orbit_pos.y * lerp_position.z + lerp_position.y;
+  camera.position.z = lerp_position.z;
+  camera.rotateOnWorldAxis(new THREE.Vector3(0.0, 0.0, 1.0), -angle);
+}
+
+function update_map() {
+  const lerp = THREE.MathUtils.lerp(0, size * 2.4, lerp_position.z);
+  map_mesh.material.uniforms.zoom = {
+    value: size / lerp,
+  };
+}
+
 function update_objective_line(screenX, screenY, WorldX, WorldY, WorldZ) {
   // Convert screen coordinates to NDC
   if (highlighted) {
@@ -307,66 +359,6 @@ function update_objective_line(screenX, screenY, WorldX, WorldY, WorldZ) {
       )
     );
   }
-}
-
-function update_map() {
-  const lerp = THREE.MathUtils.lerp(0, size * 2.4, current_zoom / size);
-  map_mesh.material.uniforms.zoom = {
-    value: size / lerp,
-  };
-}
-
-function update_camera() {
-  const time = camera_clock.getElapsedTime();
-  const new_orbit_pos = new THREE.Vector2(
-    Math.sin(time * rotation_speed),
-    Math.cos(time * rotation_speed)
-  );
-  const angle = old_orbit_pos.angleTo(new_orbit_pos);
-
-  let lerp_zoom_perc = 0.0;
-  let lerp_move_perc = 0.0;
-  if (zoomingIn || zoomingOut) {
-    let lerp_elapsed_time = lerp_clock.getElapsedTime();
-    if (lerp_elapsed_time < lerp_time) {
-      lerp_zoom_perc = THREE.MathUtils.mapLinear(
-        lerp_elapsed_time,
-        0,
-        lerp_time,
-        0.0,
-        1.0
-      );
-      lerp_move_perc = THREE.MathUtils.mapLinear(
-        lerp_elapsed_time,
-        0,
-        lerp_time*20,
-        0.0,
-        1.0
-      );
-      if (zoomingIn) {
-        current_zoom = THREE.MathUtils.lerp(min_zoom, max_zoom, lerp_zoom_perc);
-      } else {
-        current_zoom = THREE.MathUtils.lerp(max_zoom, min_zoom, lerp_zoom_perc);
-      }
-      lerp_position = zoom_start_pos.lerp(camera_target, lerp_move_perc);
-    } else {
-      zoomingIn = false;
-      zoomingOut = false;
-      lerp_clock.stop();
-    }
-    map_mesh.material.uniforms.current_range = {
-      value: current_zoom,
-    };
-    map_mesh.material.uniforms.zone = {
-      value: new THREE.Vector2(lerp_position.x, lerp_position.y),
-    };
-  }
-  camera.position.x = new_orbit_pos.x * current_zoom + lerp_position.x;
-  camera.position.y = new_orbit_pos.y * current_zoom + lerp_position.y;
-  camera.position.z = current_zoom + lerp_position.z;
-
-  camera.rotateOnWorldAxis(new THREE.Vector3(0.0, 0.0, 1.0), -angle);
-  old_orbit_pos = new_orbit_pos;
 }
 
 function animate() {
