@@ -15,27 +15,7 @@ body {
   background-color: black;
 }
 
-.ui_button {
-  position: absolute;
-  padding: 10px;
-  box-sizing: border-box;
-  text-align: left;
-  background-color: rgba(0, 0, 0, 0);
-  border-style: solid;
-  border-width: 2px;
-  border-color: white;
-  -moz-user-select: none;
-  -webkit-user-select: none;
-  -ms-user-select: none;
-  user-select: none;
-  z-index: 1;
-}
-
-.ui_button:hover {
-  background-color: rgba(67, 144, 233, 0.466);
-}
-
-.content_box {
+.ui_element {
   position: absolute;
   padding: 10px;
   box-sizing: border-box;
@@ -56,7 +36,7 @@ body {
 }
 
 .selection:hover {
-    background-color: rgba(67, 144, 233, 0.466);
+    background-color: rgba(25, 65, 110, 0.432);
 }
 
 #groups {
@@ -69,4 +49,33 @@ body {
   visibility: hidden;
   top: 5%;
   left: 5%;
+}
+
+#reset_view:hover {
+  background-color: rgba(25, 65, 110, 0.432);
+}
+
+.info_name {
+  font-size: 30px;
+}
+
+.info_item_name {
+  margin-bottom: 5%;
+}
+
+.info_item_name:last-child{
+  margin-bottom: 0%;
+}
+
+.info_item_coords {
+  margin-bottom: 5%;
+}
+
+#group_info {
+  background-color: rgba(25, 65, 110, 0.432);
+  padding: 1.5%;
+  visibility: hidden;
+  width: 20%;
+  top: 15%;
+  right: 5%;
 }

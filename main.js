@@ -15,6 +15,7 @@ let camera, map_mesh, line, mission_info;
 const container = document.getElementById("container");
 const reset_view = document.getElementById("reset_view");
 const group_box = document.getElementById("groups");
+const group_info_box = document.getElementById("group_info");
 const renderer = new THREE.WebGLRenderer();
 const scene = new THREE.Scene();
 const loader = new THREE.TextureLoader();
@@ -24,6 +25,7 @@ let zoomingIn = false;
 let zoomingOut = false;
 let screenX = 0.0;
 let screenY = 0.0;
+let lerp_move_perc = 0.0;
 let group_coordinates = [0.0, 0.0, 0.0];
 let camera_target = new THREE.Vector3(0.0, 0.0, min_zoom);
 let lerp_position = new THREE.Vector3(0.0, 0.0, min_zoom);
@@ -128,7 +130,7 @@ function load_map(map_file) {
   
           pos = vec4(newPosition, 1.0);
   
-          gl_PointSize = 1.0*zoom;
+          gl_PointSize = zoom;
           gl_Position = projectionMatrix * modelViewMatrix * vec4(newPosition, 1.0);
       }
       `,
@@ -220,6 +222,27 @@ function removeHighlight() {
 }
 
 function zoomObjective(event) {
+  // get group info
+  group_info_box.textContent = '';
+  let div_name = document.createElement("div");
+  div_name.className = "info_name";
+  div_name.textContent = mission_info.groups[event.target.id].name.toUpperCase();
+  group_info_box.appendChild(div_name);
+
+  let coord_div = document.createElement("div");
+  coord_div.className = "info_item_coords";
+  coord_div.innerText = "[ " + mission_info.groups[event.target.id].coordinates + " ]";
+  group_info_box.appendChild(coord_div);
+
+  let group_items = mission_info.groups[event.target.id].items
+  for (const item in group_items) {
+    let div = document.createElement("div");
+    div.className = "info_item_name";
+    div.innerText = group_items[item].name.toUpperCase();
+    group_info_box.appendChild(div);
+  }
+
+  // get coords
   group_coordinates = mission_info.groups[event.target.id].coordinates;
   camera_target.x = group_coordinates[0];
   camera_target.y = group_coordinates[1];
@@ -237,6 +260,7 @@ function zoomObjective(event) {
   zoomingIn = true;
   lerp_clock.start();
   // group_box.style.visibility = "hidden";
+  group_info_box.style.visibility = "visible";
   reset_view.style.visibility = "visible";
 }
 
@@ -255,6 +279,7 @@ function resetZoom() {
   lerp_clock.start();
   // group_box.style.visibility = "visible";
   reset_view.style.visibility = "hidden";
+  group_info_box.style.visibility = "hidden";
 }
 
 // Updates
@@ -267,7 +292,6 @@ function update_camera() {
   const angle = old_orbit_pos.angleTo(new_orbit_pos);
   old_orbit_pos = new_orbit_pos;
 
-  let lerp_move_perc = 0.0;
   if (zoomingIn || zoomingOut) {
     let lerp_elapsed_time = lerp_clock.getElapsedTime();
     if (lerp_elapsed_time < lerp_time) {
@@ -301,9 +325,8 @@ function update_camera() {
 }
 
 function update_map() {
-  const lerp = THREE.MathUtils.lerp(0, size * 2.4, lerp_position.z);
   map_mesh.material.uniforms.zoom = {
-    value: size / lerp,
+    value: min_zoom/lerp_position.z,
   };
 }
 
