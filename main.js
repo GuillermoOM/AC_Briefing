@@ -6,7 +6,7 @@ const size = 1024;
 const max_zoom = size * 0.15;
 const min_zoom = size * 0.65;
 const rotation_speed = 0.05;
-const lerp_time = 2.0;
+const lerp_time = 1.0;
 
 // Globals
 let camera, map_mesh, line, mission_info;
@@ -36,6 +36,65 @@ let lerp_position = new THREE.Vector3(0.0, 0.0, min_zoom);
 let zoom_start_pos = new THREE.Vector3(0.0, 0.0, min_zoom);
 let old_orbit_pos = new THREE.Vector2(0.0, 0.0);
 let highlighted = false;
+let map_icons = {};
+
+class MapIcon {
+  constructor(type, color) {
+    this.type = type
+    this.color = color;
+    if (type == "AIR"){
+      this.geometry = new THREE.BufferGeometry();
+      this.vertices = new Float32Array([
+        0.0, 0.0, 15.0, // 0
+        0.0, -5.0, 0.0, // 1
+        -5.0, 0.0, 0.0, // 2
+        5.0, 0.0, 0.0, // 3
+      ]);
+  
+      const indices = [3, 1, 0, 3, 2, 1, 0, 2, 3, 0, 1, 2];
+      this.geometry.setIndex(indices);
+      this.geometry.setAttribute(
+        "position",
+        new THREE.BufferAttribute(this.vertices, 3)
+      );
+    }
+    else {
+      this.geometry = new THREE.BoxGeometry(5.0, 5.0, 5.0);
+    }
+
+    this.material = new THREE.MeshBasicMaterial( { color: this.color } );
+
+    this.material = new THREE.ShaderMaterial({
+      uniforms: {
+        zone: { value: new THREE.Vector2(0.0, 0.0) },
+        current_range: { value: size },
+        color: { value: new THREE.Vector3(color[0], color[1], color[2]) },
+      },
+      vertexShader: `
+        varying vec4 pos;
+        
+        void main()
+        {
+            pos = vec4(position, 1.0);
+            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }
+        `,
+      fragmentShader: `
+        uniform float current_range;
+        uniform vec2 zone;
+        uniform vec3 color;
+
+        varying vec4 pos;
+        
+        void main()
+        { 
+          gl_FragColor = vec4(color.x, color.y, color.z, 1.0);
+        }
+        `
+    });
+    this.mesh = new THREE.Mesh(this.geometry, this.material);
+  }
+}
 
 async function init() {
   renderer.setSize(window.innerWidth, window.innerHeight);
@@ -70,6 +129,20 @@ function setup_camera() {
   );
 }
 
+function load_group_icons(group_info) {
+  group_info.items.forEach(item => {
+    map_icons[item.name] = new MapIcon(item.type, item.color);
+    scene.add(map_icons[item.name].mesh);
+    map_icons[item.name].mesh.position.x = item.coordinates[0];
+    map_icons[item.name].mesh.position.y = item.coordinates[1];
+    map_icons[item.name].mesh.position.z = item.coordinates[2];
+    if (item.heading) {
+      map_icons[item.name].mesh.lookAt(new THREE.Vector3(item.heading[0], item.heading[1], item.heading[2]));
+      // console.log(item.heading);
+    }
+  });
+}
+
 function load_groups() {
   const json_groups = mission_info.groups;
   for (const group in json_groups) {
@@ -78,6 +151,7 @@ function load_groups() {
     div.className = "group_selection";
     div.innerText = json_groups[group].name.toUpperCase();
     group_box.appendChild(div);
+    load_group_icons(json_groups[group]);
   }
   document.getElementById("groups").childNodes.forEach((element) => {
     element.addEventListener("mouseenter", highlightObjective);
@@ -177,7 +251,7 @@ function load_map(map_file) {
                 gl_FragColor = vec4(vAmount-0.2, vAmount+0.2, vAmount+0.4, 1.0);
               }
               else {
-                gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
+                gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0);
               }
           }
       }
@@ -245,10 +319,16 @@ function zoomObjective(event) {
 
   let group_items = mission_info.groups[event.target.id].items;
   for (const item in group_items) {
-    let div = document.createElement("div");
-    div.className = "info_item_name";
-    div.innerText = group_items[item].name.toUpperCase();
-    group_info_box.appendChild(div);
+    let div_item_name = document.createElement("div");
+    div_item_name.className = "info_item_name";
+    div_item_name.innerText = group_items[item].name.toUpperCase();
+    div_item_name.style.color = "rgba(".concat(group_items[item].color[0],",", group_items[item].color[1],",", group_items[item].color[2])+")";
+    group_info_box.appendChild(div_item_name);
+
+    let div_desc = document.createElement("div");
+    div_desc.className = "info_item_desc";
+    div_desc.innerText = group_items[item].description.toUpperCase();
+    group_info_box.appendChild(div_desc);
   }
 
   // get coords
@@ -303,11 +383,11 @@ function update_camera() {
 
   if (zoomingIn || zoomingOut) {
     let lerp_elapsed_time = lerp_clock.getElapsedTime();
-    if (lerp_elapsed_time < lerp_time) {
+    if (lerp_elapsed_time < lerp_time*15) {
       lerp_move_perc = THREE.MathUtils.mapLinear(
         lerp_elapsed_time,
         0,
-        lerp_time,
+        lerp_time*15,
         0.0,
         1.0
       );
@@ -317,12 +397,6 @@ function update_camera() {
       zoomingOut = false;
       lerp_clock.stop();
     }
-    map_mesh.material.uniforms.current_range = {
-      value: lerp_position.z,
-    };
-    map_mesh.material.uniforms.zone = {
-      value: new THREE.Vector2(lerp_position.x, lerp_position.y),
-    };
   } else {
     lerp_position = camera_target;
   }
@@ -333,28 +407,46 @@ function update_camera() {
   update_minimap(lerp_position.x, lerp_position.y, lerp_position.z);
 }
 
-function update_map_mesh() {
+function update_shaders() {
+  map_mesh.material.uniforms.current_range = {
+    value: lerp_position.z,
+  };
+  map_mesh.material.uniforms.zone = {
+    value: new THREE.Vector2(lerp_position.x, lerp_position.y),
+  };
   map_mesh.material.uniforms.zoom = {
     value: min_zoom / lerp_position.z,
   };
+  for (const icon in map_icons) {
+    map_icons[icon].mesh.material.uniforms.current_range = {
+      value: lerp_position.z,
+    };
+    map_icons[icon].mesh.material.uniforms.zone = {
+      value: new THREE.Vector2(lerp_position.x, lerp_position.y),
+    };
+    if ((map_icons[icon].mesh.position.x > (lerp_position.x - lerp_position.z)&& map_icons[icon].mesh.position.x < (lerp_position.x + lerp_position.z)) && (map_icons[icon].mesh.position.y > (lerp_position.y - lerp_position.z) && map_icons[icon].mesh.position.y < (lerp_position.y + lerp_position.z))){
+      map_icons[icon].mesh.material.uniforms.color = {
+        value: map_icons[icon].color,
+      };
+    }
+    else {
+      map_icons[icon].mesh.material.uniforms.color = {
+        value: new THREE.Vector3(0.0, 0.0, 0.0),
+      };
+    }
+  }
 }
 
 function update_minimap(x, y, zoom) {
-  map_x_axis.style.left =
-    THREE.MathUtils.mapLinear(x, -size / 2, size / 2, 0, 100) + "%";
-  map_y_axis.style.top =
-    THREE.MathUtils.mapLinear(y, -size / 2, size / 2, 0, 100) + "%";
+  let map_x = THREE.MathUtils.mapLinear(x, -size / 2, size / 2, 0, 100);
+  let map_y = THREE.MathUtils.mapLinear(y, -size / 2, size / 2, 100, 0);
   let box_size = THREE.MathUtils.mapLinear(zoom, 0, min_zoom, 0, 100);
+  map_x_axis.style.left = map_x + "%";
+  map_y_axis.style.top = map_y + "%";
   map_zoom_zone.style.width = box_size + "%";
   map_zoom_zone.style.height = box_size + "%";
-  map_zoom_zone.style.left =
-    THREE.MathUtils.mapLinear(x, -size / 2, size / 2, 0, 100) -
-    box_size / 2 +
-    "%";
-  map_zoom_zone.style.top =
-    THREE.MathUtils.mapLinear(y, -size / 2, size / 2, 0, 100) -
-    box_size / 2 +
-    "%";
+  map_zoom_zone.style.left = map_x - box_size / 2 + "%";
+  map_zoom_zone.style.top = map_y - box_size / 2 + "%";
 }
 
 function update_objective_line(screenX, screenY, WorldX, WorldY, WorldZ) {
@@ -421,7 +513,7 @@ function animate() {
     group_coordinates[1],
     group_coordinates[2]
   );
-  update_map_mesh();
+  update_shaders();
   renderer.render(scene, camera);
 }
 

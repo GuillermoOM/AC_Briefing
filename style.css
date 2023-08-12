@@ -64,18 +64,22 @@ body {
 
 .info_name {
   font-size: 25px;
-}
-
-.info_item_name {
   margin-bottom: 5%;
-}
-
-.info_item_name:last-child {
-  margin-bottom: 0%;
 }
 
 .info_item_coords {
+  align-content: end;
+  margin-bottom: 10%;
+}
+
+.info_item_desc {
+  font-size: 15px;
+  margin-left: 15%;
   margin-bottom: 5%;
+}
+
+.info_item_desc:last-child {
+  margin-bottom: 0%;
 }
 
 #map {
