@@ -8,7 +8,7 @@
         {
           "name": "Mobius 1",
           "type": "AIR",
-          "color": [0.0,255.0,255.0],
+          "color": [0.0,150.0,150.0],
           "coordinates": [0.0, -300.0, 100.0],
           "heading": [0.0,0.0,100.0],
           "description": "Player"
@@ -22,21 +22,21 @@
         {
           "name": "SAM_1",
           "type": "GND",
-          "color": [255.0,0.0,0.0],
+          "color": [150.0,0.0,0.0],
           "coordinates": [-240.0, 230.0, 20.0],
           "description": "Anti Air Gun"
         },
         {
           "name": "SAM_2",
           "type": "GND",
-          "color": [255.0,0.0,0.0],
+          "color": [150.0,0.0,0.0],
           "coordinates": [-190.0, 250.0, 10.0],
           "description": "Anti Air Gun"
         },
         {
           "name": "SAM_3",
           "type": "GND",
-          "color": [255.0,0.0,0.0],
+          "color": [150.0,0.0,0.0],
           "coordinates": [-200.0, 190.0, 20.0],
           "description": "Anti Air Gun"
         }
@@ -49,7 +49,7 @@
         {
           "name": "Radar",
           "type": "GND",
-          "color": [255.0,255.0,0.0],
+          "color": [150.0,150.0,0.0],
           "coordinates": [250.0, 340.0, 40.0],
           "description": "Long Range Radar"
         }

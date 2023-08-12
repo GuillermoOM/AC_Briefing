@@ -62,13 +62,11 @@ class MapIcon {
       this.geometry = new THREE.BoxGeometry(5.0, 5.0, 5.0);
     }
 
-    this.material = new THREE.MeshBasicMaterial( { color: this.color } );
-
     this.material = new THREE.ShaderMaterial({
       uniforms: {
         zone: { value: new THREE.Vector2(0.0, 0.0) },
         current_range: { value: size },
-        color: { value: new THREE.Vector3(color[0], color[1], color[2]) },
+        color: { value: new THREE.Vector3(color[0]/255, color[1]/255, color[2]/255) },
       },
       vertexShader: `
         varying vec4 pos;
@@ -426,7 +424,7 @@ function update_shaders() {
     };
     if ((map_icons[icon].mesh.position.x > (lerp_position.x - lerp_position.z)&& map_icons[icon].mesh.position.x < (lerp_position.x + lerp_position.z)) && (map_icons[icon].mesh.position.y > (lerp_position.y - lerp_position.z) && map_icons[icon].mesh.position.y < (lerp_position.y + lerp_position.z))){
       map_icons[icon].mesh.material.uniforms.color = {
-        value: map_icons[icon].color,
+        value: new THREE.Vector3(map_icons[icon].color[0]/255.0, map_icons[icon].color[1]/255.0, map_icons[icon].color[2]/255.0),
       };
     }
     else {
