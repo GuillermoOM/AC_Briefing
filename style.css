@@ -134,3 +134,42 @@ body {
   border-width: 1px;
   border-color: white;
 }
+
+#about {
+  background-color: rgb(9, 25, 43);
+  padding-left: 1vh;
+  padding-top: 0;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+#close_modal {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  font-size: 20px;
+  top: 10px;
+  right: 10px;
+  transition: color 500ms, background-color 500ms;
+  text-align: center;
+}
+
+#close_modal:hover{
+  color: black;
+  background-color: white;
+}
+
+#about-body h6 {
+  margin-left: 50%;
+}
+
+#about_button {
+  visibility: hidden;
+  top: 5%;
+  right: 5%;
+}
+
+#about_button:hover {
+  background-color: rgba(25, 65, 110, 0.432);
+}

@@ -1,57 +1,147 @@
 {
-  "map_file": "/render.png",
+  "map_file": "/novillo.png",
   "groups": {
-    "Attack_Group": {
-      "name": "Attack Group",
-      "coordinates": [0.0, -300.0, 50.0],
+    "Work_Experience": {
+      "name": "Work Experience",
+      "coordinates": [0.0, -300.0, 100.0],
       "items": [
         {
-          "name": "Mobius 1",
+          "name": "Softtek",
           "type": "AIR",
           "color": [0.0,150.0,150.0],
-          "coordinates": [0.0, -300.0, 100.0],
+          "coordinates": [0.0, -280.0, 100.0],
           "heading": [0.0,0.0,100.0],
-          "description": "Player"
+          "description": "[ 2019 - Present ] \n - Software Developer Engineer in Testing"
+        },
+        {
+          "name": "AGROPRO",
+          "type": "AIR",
+          "color": [0.0,150.0,0.0],
+          "coordinates": [-25.0, -310.0, 100.0],
+          "heading": [-25.0,0.0,100.0],
+          "description": "[ 2018 - 2019 ] \n - Data Analyst / Software Engineer"
+        },
+        {
+          "name": "Mazarino",
+          "type": "AIR",
+          "color": [150.0,150.0,0.0],
+          "coordinates": [25.0, -310.0, 100.0],
+          "heading": [25.0,0.0,100.0],
+          "description": "[ 2016 - Partial ] \n - Software Development / Consultant"
+        },
+        {
+          "name": "BIOPRAXIS",
+          "type": "AIR",
+          "color": [200.0,200.0,200.0],
+          "coordinates": [-50.0, -340.0, 100.0],
+          "heading": [-50.0,0.0,100.0],
+          "description": "[ 2018 ] \n - Internship / Embedded Software Developer"
+        },
+        {
+          "name": "THERVAL",
+          "type": "AIR",
+          "color": [150.0,0.0,150.0],
+          "coordinates": [50.0, -340.0, 100.0],
+          "heading": [50.0,0.0,100.0],
+          "description": "[ 2017 ] \n - Internship / Mechatronics Engineer"
         }
       ]
     },
-    "Primary_Objective": {
-      "name": "Secondary Objective",
+    "Education": {
+      "name": "Education",
       "coordinates": [-200.0, 250.0, 20.0],
       "items": [
         {
-          "name": "SAM_1",
+          "name": "Tecnologico de Monterrey",
           "type": "GND",
-          "color": [150.0,0.0,0.0],
+          "color": [200.0,130.0,0.0],
           "coordinates": [-240.0, 230.0, 20.0],
-          "description": "Anti Air Gun"
+          "description": "[ 2014 - 2019 ] \n - B.S. In Mecatronics"
         },
         {
-          "name": "SAM_2",
+          "name": "Universidad del Pais Vasco",
           "type": "GND",
-          "color": [150.0,0.0,0.0],
+          "color": [200.0,0.0,0.0],
           "coordinates": [-190.0, 250.0, 10.0],
-          "description": "Anti Air Gun"
-        },
-        {
-          "name": "SAM_3",
-          "type": "GND",
-          "color": [150.0,0.0,0.0],
-          "coordinates": [-200.0, 190.0, 20.0],
-          "description": "Anti Air Gun"
+          "description": "[ 2018 ] \n - Exchange Program"
         }
       ]
     },
-    "Satellites": {
-      "name": "Primary Objective",
-      "coordinates": [250.0, 300.0, 10.0],
+    "Dev_Skills": {
+      "name": "Dev Skills",
+      "coordinates": [250.0, 300.0, 100.0],
       "items": [
         {
-          "name": "Radar",
+          "name": "Senior",
+          "type": "AIR",
+          "color": [0.0,200.0,0.0],
+          "coordinates": [250.0, 340.0, 100.0],
+          "heading": [0.0,300.0,100.0],
+          "description": "- Python \n - ReadyAPI"
+        },
+        {
+          "name": "Profficient",
+          "type": "AIR",
+          "color": [150.0,200.0,100.0],
+          "coordinates": [280.0, 320.0, 100.0],
+          "heading": [0.0,300.0,100.0],
+          "description": "- Test Automation \n - Selenium \n - C \n - SQL \n - JavaScript \n - HTML/CSS \n - Groovy \n - Java \n - Excel VBA \n - GIT \n - Linux \n - Jira \n - TestRail \n - Test Complete"
+        },
+        {
+          "name": "Mid",
+          "type": "AIR",
+          "color": [200.0,0.0,0.0],
+          "coordinates": [300.0, 270.0, 100.0],
+          "heading": [0.0,290.0,100.0],
+          "description": "- Java \n - C# \n - React \n - Svelte \n - NodeJS \n - Playwright \n - Cypress \n - REST"
+        },
+        {
+          "name": "Junior",
+          "type": "AIR",
+          "color": [200.0,200.0,0.0],
+          "coordinates": [280.0, 290.0, 100.0],
+          "heading": [0.0,290.0,100.0],
+          "description": "- Rust"
+        }
+      ]
+    },
+    "Engineering_Skills": {
+      "name": "Engineer Skills",
+      "coordinates": [250.0, 0.0, 20.0],
+      "items": [
+        {
+          "name": "Mid",
           "type": "GND",
-          "color": [150.0,150.0,0.0],
-          "coordinates": [250.0, 340.0, 40.0],
-          "description": "Long Range Radar"
+          "color": [200.0,200.0,0.0],
+          "coordinates": [230.0, 0.0, 20.0],
+          "description": "- CAD \n - Embedded Systems \n - Microcontrollers \n - Internet of Things \n - CNC Programming \n - PLC Programming \n - 3D Printing \n - LabView \n - MATLAB"
+        },
+        {
+          "name": "Junior",
+          "type": "GND",
+          "color": [200.0,0.0,0.0],
+          "coordinates": [250.0, 20.0, 20.0],
+          "description": "- PCB Design \n - Industrial Networking"
+        }
+      ]
+    },
+    "Awards_Certs": {
+      "name": "Awards and Certifications",
+      "coordinates": [0.0, 200.0, 20.0],
+      "items": [
+        {
+          "name": "Awards",
+          "type": "GND",
+          "color": [120.0,200.0,120.0],
+          "coordinates": [0.0, 200.0, 30.0],
+          "description": "- Award for Excellence in \n CENEVAL national standarized Mechatronics engineering test \n - Distinguished student from class of 2019"
+        },
+        {
+          "name": "Certifications",
+          "type": "GND",
+          "color": [200.0,200.0,200.0],
+          "coordinates": [40.0, 200.0, 40.0],
+          "description": "- A4Q Selenium Tester Foundation"
         }
       ]
     }
