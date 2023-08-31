@@ -154,7 +154,7 @@
           "type": "GND",
           "color": [120.0,200.0,120.0],
           "coordinates": [-300.0, 0.0, 50.0],
-          "description": "<p>My custom portfolio website inspired by the videogame Ace Combat 4 (mission briefing).</p><a  target='_blank' rel='noopener noreferrer' href='https://github.com/GuillermoOM/AC_Briefing'>GitHub Project</a>"
+          "description": "<p>My custom website inspired by the videogame Ace Combat 4 (mission briefing).</p><a  target='_blank' rel='noopener noreferrer' href='https://github.com/GuillermoOM/AC_Briefing'>GitHub Project</a>"
         },
         {
           "name": "Random GOG Game",
