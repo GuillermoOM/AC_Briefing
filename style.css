@@ -32,7 +32,7 @@ body {
 }
 
 #groups {
-  top: 15%;
+  top: 10%;
   left: 5%;
 }
 
@@ -55,11 +55,12 @@ body {
 }
 
 #group_info {
-  background-color: rgba(25, 65, 110, 0.432);
+  background-color: rgb(9, 25, 43);
   padding: 1.5%;
   visibility: hidden;
-  top: 15%;
+  top: 10%;
   right: 5%;
+  max-width: 35vw;
 }
 
 .info_name {
@@ -172,4 +173,18 @@ body {
 
 #about_button:hover {
   background-color: rgba(25, 65, 110, 0.432);
+}
+
+a:link, a:visited {
+  color: black;
+  background-color: white;
+  text-decoration: none;
+  padding: 2px;
+}
+
+a:hover {
+  color: rgb(255, 255, 255);
+  background-color: rgb(0, 0, 0);
+  text-decoration: none;
+  padding: 2px;
 }

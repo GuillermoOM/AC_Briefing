@@ -361,7 +361,7 @@ function zoomObjective(event) {
 
     let div_desc = document.createElement("div");
     div_desc.className = "info_item_desc";
-    div_desc.innerText = group_items[item].description.toUpperCase();
+    div_desc.innerHTML = group_items[item].description;
     group_info_box.appendChild(div_desc);
   }
 
