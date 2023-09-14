@@ -150,18 +150,18 @@
       "coordinates": [-300.0, 0.0, 20.0],
       "items": [
         {
-          "name": "AC_Briefing",
-          "type": "GND",
-          "color": [120.0,200.0,120.0],
-          "coordinates": [-300.0, 0.0, 50.0],
-          "description": "<p>My custom website inspired by the videogame Ace Combat 4 (mission briefing).</p><a  target='_blank' rel='noopener noreferrer' href='https://github.com/GuillermoOM/AC_Briefing'>GitHub Project</a>"
-        },
-        {
-          "name": "Random GOG Game",
+          "name": "Jayson Framework",
           "type": "GND",
           "color": [200.0,200.0,200.0],
           "coordinates": [-320.0, 10.0, 45.0],
-          "description": "<p>Simple GOG Galaxy random game selection script. Now Integrated to the actual software.</p><a  target='_blank' rel='noopener noreferrer' href='https://github.com/GuillermoOM/random_gog_game'>GitHub Project</a>"
+          "description": "<p>Custom Selenium based web testing framework. Set in a private repo</p>"
+        },
+        {
+          "name": "GO_Portfolio",
+          "type": "GND",
+          "color": [120.0,200.0,120.0],
+          "coordinates": [-300.0, 0.0, 50.0],
+          "description": "<p>My custom website inspired by the videogame Ace Combat 4 (mission briefing).</p><a  target='_blank' rel='noopener noreferrer' href='https://github.com/GuillermoOM/GO_Portfolio'>GitHub Project</a>"
         },
         {
           "name": "Report Generator",
