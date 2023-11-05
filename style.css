@@ -22,7 +22,7 @@ body {
   text-align: left;
   background-color: rgba(0, 0, 0, 0);
   border-style: solid;
-  border-width: 2px;
+  border-width: 3px;
   border-color: white;
   -moz-user-select: none;
   -webkit-user-select: none;
@@ -32,7 +32,7 @@ body {
 }
 
 #groups {
-  top: 10%;
+  top: 15vh;
   left: 5%;
 }
 
@@ -58,9 +58,11 @@ body {
   background-color: rgb(9, 25, 43);
   padding: 1.5%;
   visibility: hidden;
-  top: 10%;
+  top: 10vh;
   right: 5%;
-  max-width: 35vw;
+  max-width: 45vw;
+  max-height: 80vh;
+  overflow: scroll;
 }
 
 .info_name {
