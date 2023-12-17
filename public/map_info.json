@@ -6,12 +6,20 @@
       "coordinates": [0.0, -300.0, 100.0],
       "items": [
         {
+          "name": "Pinterest",
+          "type": "AIR",
+          "color": [190.0,0.0,0.0],
+          "coordinates": [0.0, -230.0, 100.0],
+          "heading": [0.0,0.0,100.0],
+          "description": "[ 2023 - Present ]<br>- Software Engineer II"
+        },
+        {
           "name": "Softtek",
           "type": "AIR",
           "color": [0.0,150.0,150.0],
           "coordinates": [0.0, -280.0, 100.0],
           "heading": [0.0,0.0,100.0],
-          "description": "[ 2019 - Present ]<br>- Software Developer Engineer in Testing"
+          "description": "[ 2019 - 2023 ]<br>- Software Developer Engineer in Testing"
         },
         {
           "name": "AGROPRO",
